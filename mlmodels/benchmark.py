@@ -256,7 +256,7 @@ def main():
 
 
     elif arg.do == "custom":
-        log("NLP Reuters")
+        log("Custom benchmark")
         bench_pars = json.load(open( arg.benchmark_json, mode='r'))
         log(bench_pars['metric_list'])
         benchmark_run(bench_pars=bench_pars, args=arg)
