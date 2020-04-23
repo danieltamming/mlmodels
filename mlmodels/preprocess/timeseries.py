@@ -22,17 +22,15 @@ Gluon TS
 import os, sys
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from collections import OrderedDict
 
 
 from mlmodels.util import path_norm
 
 
-import gluonts
 
 
-
+####################################################################################################
 ####################################################################################################
 def gluonts_dataset_to_pandas(dataset_name_list=["m4_hourly", "m4_daily", "m4_weekly", "m4_monthly", "m4_quarterly", "m4_yearly", ]):
     """
@@ -175,13 +173,11 @@ def pandas_to_gluonts(df, pars=None) :
     return ds 
 
 
-def tofloat(x):
-    try :
-        return float(x)
-    except :
-        return np.nan
 
-def tests():    
+
+
+
+def test_gluonts():    
     df = pd.read_csv(path_norm("dataset/timeseries/TSLA.csv "))
     df = df.set_index("Date")
     pars = { "start" : "", "cols_target" : [ "High", "Low" ],
@@ -215,6 +211,10 @@ def tests():
 
 
 
+
+
+####################################################################################################
+####################################################################################################
 class Preprocess_nbeats:
     """
       it should go to nbeats.py BECAUSE Specialized code.
@@ -243,13 +243,26 @@ class Preprocess_nbeats:
 class SklearnMinMaxScaler:
 
     def __init__(self, **args):
+        from sklearn.preprocessing import MinMaxScaler
         self.preprocessor = MinMaxScaler(**args)
+
     def compute(self,df):
         self.preprocessor.fit(df)
         self.data = self.preprocessor.transform(df)
         
     def get_data(self):
         return self.data
+
+
+
+
+####################################################################################################
+####################################################################################################
+def tofloat(x):
+    try :
+        return float(x)
+    except :
+        return np.nan
 
 
 
@@ -497,7 +510,7 @@ def benchmark_m4() :
 ####################################################################################################
 if __name__ == '__main__':
    VERBOSE = True
-   tests()
+   test_gluonts()
     
 
 
