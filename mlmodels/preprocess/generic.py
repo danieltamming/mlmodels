@@ -5,13 +5,19 @@ Related to data procesisng
 
 
 """
+<<<<<<< HEAD
 # import os, Path
 import os
+=======
+import os
+from pathlib import Path
+>>>>>>> d38fe0f065d3262a67568c13e0ef988b7c6903d9
 import pandas as pd, numpy as np
 
 
 from mlmodels.util import path_norm
 
+from torch.utils.data import Dataset
 
 
 ###############################################################################################################
@@ -26,56 +32,147 @@ def torch_datasets_wrapper(sets, args_list = None, **args):
 
 
 
-def load_function(package="mlmodels.util", name="path_norm"):
+def load_function(uri_name="path_norm"):
+  """
+     Can load remote part
+
+  """  
   import importlib
+  pkg = uri_name.split(":")
+  package, name = pkg[0], pkg[1]
   return  getattr(importlib.import_module(package), name)
+
+
 
 
 def get_dataset_torch(data_pars):
     """"
-     MNIST Fashion-MNIST KMNIST EMNIST QMNIST  FakeData COCO Captions Detection LSUN ImageFolder DatasetFolder 
-     ImageNet CIFAR STL10 SVHN PhotoTour SBU Flickr VOC Cityscapes SBD USPS Kinetics-400 HMDB51 UCF101 CelebA
+      torchvison.datasets
+         MNIST Fashion-MNIST KMNIST EMNIST QMNIST  FakeData COCO Captions Detection LSUN ImageFolder DatasetFolder 
+         ImageNet CIFAR STL10 SVHN PhotoTour SBU Flickr VOC Cityscapes SBD USPS Kinetics-400 HMDB51 UCF101 CelebA
 
-     Sentiment Analysis
-       SST IMDb Question Classification TREC Entailment SNLI MultiNLI Language Modeling WikiText-2 WikiText103 
-       PennTreebank Machine Translation Multi30k IWSLT WMT14 Sequence Tagging UDPOS CoNLL2000Chunking Question Answering BABI20
+      torchtext.datasets
+         Sentiment Analysis:    SST IMDb Question Classification TREC Entailment SNLI MultiNLI 
+         Language Modeling:     WikiText-2 WikiText103  PennTreebank 
+         Machine Translation :  Multi30k IWSLT WMT14 
+         Sequence Tagging    :  UDPOS CoNLL2000Chunking 
+         Question Answering  :  BABI20
+
+
+    ##### MNIST case 
+    "dataset"       : "torchvision.datasets:MNIST"
+    "transform_uri" : "mlmodels.preprocess.image:torch_transform_mnist"
+
+
+    ##### Pandas CSV case
+    "dataset"        : "mlmodels.preprocess.torch:pandasDataset"
+    "transform_uri"  : "mlmodels.preprocess.text:torch_fillna"
+
+
     """
     import torch
     d = data_pars
-    
-    if  d["transform"]  :
-       transform = load_function(  d.get("preprocess_module", "mlmodels.preprocess.image"), 
-                                   d.get("transform", "torch_transform_mnist" ))()
+
+    transform = None
+    if  data_pars.get("transform_uri")   :
+       transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
+
+
+    #### from mlmodels.preprocess.image import pandasDataset
+    dset = load_function(d.get("dataset", "torchvision.datasets:MNIST") )
+
+
+    if d.get('train_path') and  d.get('test_path') :
+        ###### Custom Build Dataset   ####################################################
+        dset_inst = dset(d['train_path'], train=True, download=True, transform= transform, data_pars=data_pars)
+        train_loader = torch.utils.data.DataLoader( dset_inst, batch_size=d['train_batch_size'], shuffle= d.get('shuffle', True))
+        
+        dset_inst = dset(d['test_path'], train=False, download=True, transform= transform, data_pars=data_pars)
+        valid_loader = torch.utils.data.DataLoader( dset_inst, batch_size=d['train_batch_size'], shuffle= d.get('shuffle', True))
+
+
     else :
-       transform = None
+        ###### Pre Built Dataset available  #############################################
+        dset_inst = dset(d['data_path'], train=True, download=True, transform= transform)
+        train_loader = torch.utils.data.DataLoader( dset_inst, batch_size=d['train_batch_size'], shuffle= d.get('shuffle', True))
+        
+        dset_inst = dset(d['data_path'], train=False, download=True, transform= transform)
+        valid_loader = torch.utils.data.DataLoader( dset_inst, batch_size=d['train_batch_size'], shuffle= d.get('shuffle', True))
 
-
-    if d['train_path'] :
-      # Load from files  
-      pass
-
-
-    if d['test_path'] :
-      # Load from files  
-      pass
-
-
-    
-    dataset_module =  d.get('dataset_module', "torchvision.datasets")   
-    dset = load_function(package=dataset_module, name=d["dataset"])
-    # dset(d['data_path'], train=True, transform=None, target_transform=None, download=False)
-    # print(os.getcwd())
-    # print(os.listdir())
-    # print(os.path.exists('mlmodels/dataset/vision/MNIST/'))
-    # exit()
-
-    train_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=True, download=False, transform= transform),
-                                                batch_size=d['train_batch_size'], shuffle=True)
-    
-    valid_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=False, download=False, transform= transform),
-                                                batch_size=d['test_batch_size'], shuffle=False)
 
     return train_loader, valid_loader  
+
+
+
+
+class pandasDataset(Dataset):
+    """
+    Defines a dataset composed of sentiment text and labels
+    Attributes:
+        df (Dataframe): Dataframe of the CSV from teh path
+        sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
+        data (list[int, [int]]): The data in the set
+    """
+   
+    def __init__(self,root="", train=True, transform=None, target_transform=None,
+                 download=False, data_pars=None, ):
+        import torch
+        self.data_pars        = data_pars
+        self.transform        = transform
+        self.target_transform = target_transform
+        self.download         = download
+        d = data_pars
+
+
+        path = d['train_path'] if train else d['test_path']
+        filename = d['filename']
+        colX =d['colX']
+
+
+        # df = torch.load(os.path.join(path, filename))
+        df = pd.read_csv(os.path.join(path, filename))
+        self.df = df
+
+
+        #### Split  ####################
+        X = df[ colX ]
+        labels = df[ d["coly"] ]
+
+
+        #### Compute sample weights from inverse class frequencies
+        class_sample_count = np.unique(labels, return_counts=True)[1]
+        weight = 1. / class_sample_count
+        self.samples_weight = torch.from_numpy(weight[labels])
+
+
+        #### Data Joining  ############
+        self.data = list(zip(X, labels))
+
+
+    def __len__(self):
+        return len(self.data)
+
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        X, target = self.data[index], int(self.targets[index])
+
+
+        if self.transform is not None:
+            X = self.transform(X)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return X, target
+
+    def shuffle(self, random_state=123):
+            self._df = self._df.sample(frac=1.0, random_state=random_state)
 
 
 

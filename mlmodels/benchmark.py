@@ -141,6 +141,7 @@ def benchmark_run(bench_pars=None, args=None, config_mode="test"):
 
 
 
+
 ####################################################################################################
 ############CLI Command ############################################################################
 def cli_load_arguments(config_file=None):
@@ -212,7 +213,7 @@ def main():
         arg.path_json    = "dataset/json/benchmark_timeseries/"
         arg.path_out     = "example/benchmark/timeseries/"
 
-        benchmark_run(bench_pars, arg) 
+        log(benchmark_run(bench_pars, arg)) 
 
 
     elif arg.do == "vision_mnist":
@@ -224,7 +225,7 @@ def main():
         arg.path_out     = "example/benchmark/cnn/mnist"
 
         bench_pars = {"metric_list": ["accuracy_score"]}
-        benchmark_run(bench_pars=bench_pars, args=arg)
+        log(benchmark_run(bench_pars=bench_pars, args=arg))
 
 
     elif arg.do == "vision_fashion_mnist":
@@ -236,7 +237,7 @@ def main():
         arg.path_out     = "example/benchmark/cnn/fashion_mnist/"
 
         bench_pars = {"metric_list": ["accuracy_score"]}
-        benchmark_run(bench_pars=bench_pars, args=arg)
+        log(benchmark_run(bench_pars=bench_pars, args=arg))
 
 
     elif arg.do == "nlp_reuters":
@@ -252,14 +253,14 @@ def main():
         arg.path_out     = "example/benchmark/text/"
 
         bench_pars = {"metric_list": ["accuracy, f1_score"]}
-        benchmark_run(bench_pars=bench_pars, args=arg)
+        log(benchmark_run(bench_pars=bench_pars, args=arg))
 
 
     elif arg.do == "custom":
         log("Custom benchmark")
         bench_pars = json.load(open( arg.benchmark_json, mode='r'))
         log(bench_pars['metric_list'])
-        benchmark_run(bench_pars=bench_pars, args=arg)
+        log(benchmark_run(bench_pars=bench_pars, args=arg))
 
 
     elif arg.do == "text_classification":
@@ -270,7 +271,7 @@ def main():
         arg.path_out = "example/benchmark/text_classification/"
 
         bench_pars = {"metric_list": ["accuracy_score"]}
-        benchmark_run(bench_pars=bench_pars, args=arg)
+        log(benchmark_run(bench_pars=bench_pars, args=arg))
 
 
     else :
@@ -278,3 +279,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
