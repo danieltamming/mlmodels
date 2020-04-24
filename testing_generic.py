@@ -1,4 +1,4 @@
-from generic import get_dataset_torch
+from mlmodels.preprocess.generic import get_dataset_torch
 
 data_pars = {
     'transform': False,
