@@ -14,7 +14,9 @@ data_pars = {
     'test_filename': 'test.csv',
     'coly': 0,
     'colX': 2,
-    'no_header': True
+    'no_header': True,
+    'embed_url': 'https://nlp.stanford.edu/data/glove.6B.zip',
+    'embed_name': 'glove.6B.300d.txt',
     # 'transform_uri': 'mlmodels.preprocess.image:torch_transform_mnist'
 }
 

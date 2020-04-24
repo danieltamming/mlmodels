@@ -66,7 +66,16 @@ def get_dataset_torch(data_pars):
 
     """
     import torch
+    import torchtext
     d = data_pars
+
+    # if using pretrained word embeddings
+    if d.get('embed_name'):
+        vec = torchtext.vocab.Vectors(d.get('embed_name'), url=d.get('embed_url', None))
+    else:
+        vec = None
+    print(vec.__dict__.keys())
+    exit()
 
     transform = None
     if  d.get("transform_uri")   :
