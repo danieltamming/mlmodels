@@ -5,13 +5,8 @@ Related to data procesisng
 
 
 """
-<<<<<<< HEAD
-# import os, Path
-import os
-=======
 import os
 from pathlib import Path
->>>>>>> d38fe0f065d3262a67568c13e0ef988b7c6903d9
 import pandas as pd, numpy as np
 
 
@@ -74,8 +69,8 @@ def get_dataset_torch(data_pars):
     d = data_pars
 
     transform = None
-    if  data_pars.get("transform_uri")   :
-       transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
+    if  d.get("transform_uri")   :
+        transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
 
 
     #### from mlmodels.preprocess.image import pandasDataset
@@ -109,7 +104,7 @@ class pandasDataset(Dataset):
     """
     Defines a dataset composed of sentiment text and labels
     Attributes:
-        df (Dataframe): Dataframe of the CSV from teh path
+        df (Dataframe): Dataframe of the CSV from the path
         sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
         data (list[int, [int]]): The data in the set
     """
@@ -123,26 +118,31 @@ class pandasDataset(Dataset):
         self.download         = download
         d = data_pars
 
-
-        path = d['train_path'] if train else d['test_path']
-        filename = d['filename']
-        colX =d['colX']
-
-
-        # df = torch.load(os.path.join(path, filename))
-        df = pd.read_csv(os.path.join(path, filename))
+        if train:
+            path = d['train_path']
+            filename = d['train_filename']
+        else:
+            path = d['test_path']
+            filename = d['test_filename']
+            
+        header = None if d.get('no_header') else 'infer'
+        df = pd.read_csv(os.path.join(path, filename), header=header)
         self.df = df
 
-
         #### Split  ####################
-        X = df[ colX ]
-        labels = df[ d["coly"] ]
-
+        colX = d.get('colX', 1)
+        coly = d.get('coly', 0)
+        X = df[colX] if isinstance(colX, str) else df.iloc[:, colX]
+        labels = df[coly] if isinstance(coly, str) else df.iloc[:, coly]
+        # X = df[ [colX] ]
+        # labels = df[ [coly] ]
 
         #### Compute sample weights from inverse class frequencies
-        class_sample_count = np.unique(labels, return_counts=True)[1]
+        classes, class_sample_count = np.unique(labels, return_counts=True)
         weight = 1. / class_sample_count
-        self.samples_weight = torch.from_numpy(weight[labels])
+        weights_map = dict(zip(classes.tolist(), weight.tolist()))
+        samples_weight_df = labels.map(weights_map)
+        self.samples_weight = torch.from_numpy(samples_weight_df.values)
 
 
         #### Data Joining  ############
@@ -158,9 +158,13 @@ class pandasDataset(Dataset):
         Args:
             index (int): Index
         Returns:
-            tuple: (image, target) where target is index of the target class.
+            tuple: (text, target) where target is index of the target class.
         """
-        X, target = self.data[index], int(self.targets[index])
+        # X, target = self.data[index], int(self.targets[index])
+        X, target = self.data[index]
+        # print(X)
+        # print(target)
+        # exit()
 
 
         if self.transform is not None:
