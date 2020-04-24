@@ -63,14 +63,16 @@ def get_dataset_torch(data_pars):
     
     dataset_module =  d.get('dataset_module', "torchvision.datasets")   
     dset = load_function(package=dataset_module, name=d["dataset"])
-    dset('../mlmodels/dataset/vision/MNIST/', train=True, transform=None, target_transform=None, download=False)
-    print(os.getcwd())
-    exit()
+    # dset(d['data_path'], train=True, transform=None, target_transform=None, download=False)
+    # print(os.getcwd())
+    # print(os.listdir())
+    # print(os.path.exists('mlmodels/dataset/vision/MNIST/'))
+    # exit()
 
-    train_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=True, download=True, transform= transform),
+    train_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=True, download=False, transform= transform),
                                                 batch_size=d['train_batch_size'], shuffle=True)
     
-    valid_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=False, download=True, transform= transform),
+    valid_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=False, download=False, transform= transform),
                                                 batch_size=d['test_batch_size'], shuffle=False)
 
     return train_loader, valid_loader  
