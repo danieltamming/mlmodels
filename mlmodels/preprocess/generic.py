@@ -67,7 +67,7 @@ def get_dataset_torch(data_pars):
                                                 batch_size=d['train_batch_size'], shuffle=True)
     
     valid_loader = torch.utils.data.DataLoader( dset(d['data_path'], train=False, download=True, transform= transform),
-                                                batch_size=d['train_batch_size'], shuffle=True)
+                                                batch_size=d['test_batch_size'], shuffle=True)
 
     return train_loader, valid_loader  
 
