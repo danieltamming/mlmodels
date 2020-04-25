@@ -10,11 +10,14 @@ https://github.com/NTMC-Community/MatchZoo-py/blob/master/tutorials/classificati
 import os, json
 import importlib
 import torch
-import matchzoo as mz
 import numpy as np
 import pandas as pd
+
+import matchzoo as mz
 from mlmodels.util import os_package_root_path, log, path_norm, get_model_uri, path_norm_dict
 
+
+###########################################################################################################
 MODEL_URI = get_model_uri(__file__)
 
 MODELS = {
@@ -64,9 +67,13 @@ CALLBACKS = {
     'PADDING' : lambda mn : MODELS[mn].get_default_padding_callback()
 }
 
+
+###########################################################################################################
 def get_task(model_pars):
     _task = model_pars['task']
     assert _task in TASKS.keys()
+
+    #### Task
     if _task == "ranking":
         _loss = list(model_pars["loss"].keys())[0]
         _loss_params = model_pars["loss"][_loss]
@@ -75,11 +82,14 @@ def get_task(model_pars):
         elif _loss == 'RankCrossEntropyLoss':
             loss =  LOSSES[_loss](num_neg=_loss_params["num_neg"])
         task = mz.tasks.Ranking(losses=loss)
+
     elif _task == "classification" :
         task = mz.tasks.Classification(num_classes=model_pars["num_classes"])
+
     else:
         raise Exception(f"No support task {task} yet")
 
+    #### Metrics
     _metrics = model_pars['metrics']
     task.metrics = []
     for metric in _metrics.keys():
@@ -93,6 +103,7 @@ def get_task(model_pars):
             raise Exception(f"No support of metric {metric} yet")
     return task
 
+
 def get_glove_embedding_matrix(term_index, dimension):
     glove_embedding = mz.datasets.embeddings.load_glove_embedding(dimension=dimension)
     embedding_matrix = glove_embedding.build_matrix(term_index)
@@ -100,22 +111,30 @@ def get_glove_embedding_matrix(term_index, dimension):
     embedding_matrix = embedding_matrix / l2_norm[:, np.newaxis]
     return embedding_matrix
 
-def get_data_loader(model_name, preprocessor, preprocess_pars, raw_data):
-    if "transform" in preprocess_pars:
+
+
+def get_data_loader(model_name, preprocessor, preprocessor_pars, raw_data):
+
+    pp = preprocessor_pars
+
+    if "transform" in pp:
         pack_processed = preprocessor.transform(raw_data)
-    elif "fit_transform" in preprocess_pars:
+
+    elif "fit_transform" in pp:
         pack_processed = preprocessor.fit_transform(raw_data)
 
-    mode = preprocess_pars["mode"] if "mode" in preprocess_pars else "point"
-    num_dup = preprocess_pars["num_dup"] if "num_dup" in preprocess_pars else 1
-    num_neg = preprocess_pars["num_neg"] if "num_neg" in preprocess_pars else 1
-    dataset_callback = preprocess_pars["dataset_callback"] if "dataset_callback" in preprocess_pars else None
-    glove_embedding_matrix_dim = preprocess_pars["glove_embedding_matrix_dim"] if "glove_embedding_matrix_dim" in preprocess_pars else None
+    mode                       = pp["mode"] if "mode" in pp else "point"
+    num_dup                    = pp["num_dup"] if "num_dup" in pp else 1
+    num_neg                    = pp["num_neg"] if "num_neg" in pp else 1
+    dataset_callback           = pp["dataset_callback"] if "dataset_callback" in pp else None
+    glove_embedding_matrix_dim = pp["glove_embedding_matrix_dim"] if "glove_embedding_matrix_dim" in pp else None
+    
     if glove_embedding_matrix_dim:
         # Make sure you've transformed data before generating glove embedding,
         # else, term_index would be 0 and embedding matrix would be None.
         term_index = preprocessor.context['vocab_unit'].state['term_index']
         embedding_matrix = get_glove_embedding_matrix(term_index, glove_embedding_matrix_dim)
+
 
     if dataset_callback == "HISTOGRAM":
         # For now, hardcode callback. Hard to generalize
@@ -123,30 +142,32 @@ def get_data_loader(model_name, preprocessor, preprocess_pars, raw_data):
             embedding_matrix, bin_size=30, hist_mode='LCH'
         )]
 
-    resample = preprocess_pars["resample"] if "resample" in preprocess_pars else None
-    sort = preprocess_pars["sort"] if "sort" in preprocess_pars else None
-    batch_size = preprocess_pars["batch_size"] if "batch_size" in preprocess_pars else 1
-    dataset = mz.dataloader.Dataset(
-        data_pack=pack_processed,
-        mode=mode,
-        num_dup=num_dup,
-        num_neg=num_neg,
-        batch_size=batch_size,
-        resample=resample,
-        sort=sort,
-        callbacks=dataset_callback
+    resample   = pp["resample"] if "resample" in pp else None
+    sort       = pp["sort"] if "sort" in pp else None
+    batch_size = pp["batch_size"] if "batch_size" in pp else 1
+    dataset    = mz.dataloader.Dataset(
+        data_pack  = pack_processed,
+        mode       = mode,
+        num_dup    = num_dup,
+        num_neg    = num_neg,
+        batch_size = batch_size,
+        resample   = resample,
+        sort       = sort,
+        callbacks  = dataset_callback
     )
 
-    stage = preprocess_pars["stage"] if "stage" in preprocess_pars else None
-    dataloader_callback = preprocess_pars["dataloader_callback"] if "dataloader_callback" in preprocess_pars else None
+    stage = pp["stage"] if "stage" in pp else None
+    dataloader_callback = pp["dataloader_callback"] if "dataloader_callback" in pp else None
     dataloader_callback = CALLBACKS[dataloader_callback](model_name)
     dataloader = mz.dataloader.DataLoader(
-        device='cpu',
-        dataset=dataset,
-        stage=stage,
-        callback=dataloader_callback
+        device   = 'cpu',
+        dataset  = dataset,
+        stage    = stage,
+        callback = dataloader_callback
     )
     return dataloader
+
+
 
 def update_model_param(params, model, task, preprocessor):
     model.params['task'] = task
@@ -163,8 +184,10 @@ def update_model_param(params, model, task, preprocessor):
     for key, value in params.items():
         model.params[key] = value
 
+
 def get_config_file():
     return os.path.join(os_package_root_path(__file__, 1), 'config', 'model_tch', 'Imagecnn.json')
+
 
 def get_raw_dataset(data_pars, task):
     if data_pars["dataset"] == "WIKI_QA":
@@ -199,12 +222,12 @@ class Model:
         if "basic_preprocessor" in _preprocessor_pars:
             pars = _preprocessor_pars["basic_preprocessor"]
             preprocessor = mz.preprocessors.BasicPreprocessor(
-                truncated_length_left=pars["truncated_length_left"],
-                truncated_length_right=pars["truncated_length_right"],
-                filter_low_freq=pars["filter_low_freq"]
+                truncated_length_left  = pars["truncated_length_left"],
+                truncated_length_right = pars["truncated_length_right"],
+                filter_low_freq        = pars["filter_low_freq"]
             )
         else:
-            preprocessor = MODELS[model_name].get_default_preprocessor()
+            preprocessor = MODELS[_model].get_default_preprocessor()
 
         self.trainloader = get_data_loader(_model, preprocessor, _preprocessor_pars["train"], train_pack_raw)
         self.testloader = get_data_loader(_model, preprocessor, _preprocessor_pars["test"], test_pack_raw)

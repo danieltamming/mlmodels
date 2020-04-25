@@ -1,6 +1,12 @@
 """"
-
 Related to data procesisng
+
+TO DO :
+
+   Normalize datasetloader and embedding loading
+
+
+
 
 
 
@@ -10,7 +16,7 @@ from pathlib import Path
 import pandas as pd, numpy as np
 
 
-from mlmodels.util import path_norm
+from mlmodels.util import path_norm, log
 
 from torch.utils.data import Dataset
 
@@ -112,12 +118,12 @@ def get_dataset_torch(data_pars):
     exit()
 
     transform = None
-    if  d.get("transform_uri")   :
-        transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
+    if  len(data_pars.get("transform_uri", ""))  > 1 :
+       transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
 
 
     #### from mlmodels.preprocess.image import pandasDataset
-    dset = load_function(d.get("dataset", "torchvision.datasets:MNIST") )
+    dset = load_function(d.get("dataset", "torchvision.datasets:MNIST") ) 
 
 
     if d.get('train_path') and  d.get('test_path') :
@@ -168,7 +174,7 @@ def get_model_data(model_pars, data_pars):
 
     ### Embedding Transformer
     transform = None
-    if  d.get("transform_uri")   :
+    if  len(data_pars.get("transform_uri", ""))  > 1 :
        transform = load_function( d.get("transform_uri", "mlmodels.preprocess.text:torch_transform_glove" ))()
 
 
@@ -176,7 +182,7 @@ def get_model_data(model_pars, data_pars):
     dset = load_function(d.get("embedding", "torchtext.embedding:glove") )
 
     data = None
-    if d.get('embedding_path') :
+    if len(d.get('embedding_path', "")) > 1 :
         ###### Custom Build Dataset   ####################################################
         data    = dset(d['embedding_path'], train=True, download=True, transform= transform, model_pars=model_pars, data_pars=data_pars)
         
@@ -187,6 +193,138 @@ def get_model_data(model_pars, data_pars):
 
 
     return data
+
+
+
+def text_create_tabular_dataset(path_train, path_valid,   lang='en', pretrained_emb='glove.6B.300d'):
+    import spacy
+    import torchtext
+    from torchtext.data import Field
+    from torchtext.data import TabularDataset
+    from torchtext.vocab import GloVe
+    from torchtext.data import Iterator, BucketIterator
+    import torchtext.datasets
+    from time import sleep
+    import re
+    
+    def clean_str(string):
+        """
+        Tokenization/string cleaning for all datasets except for SST.
+        Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+        """
+        string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+        string = re.sub(r"\'s", " \'s", string)
+        string = re.sub(r"\'ve", " \'ve", string)
+        string = re.sub(r"n\'t", " n\'t", string)
+        string = re.sub(r"\'re", " \'re", string)
+        string = re.sub(r"\'d", " \'d", string)
+        string = re.sub(r"\'ll", " \'ll", string)
+        string = re.sub(r",", " , ", string)
+        string = re.sub(r"!", " ! ", string)
+        string = re.sub(r"\(", " \( ", string)
+        string = re.sub(r"\)", " \) ", string)
+        string = re.sub(r"\?", " \? ", string)
+        string = re.sub(r"\s{2,}", " ", string)
+        return string.strip()
+
+
+
+    disable = [
+        'tagger', 'parser', 'ner', 'textcat'
+        'entity_ruler', 'sentencizer', 
+        'merge_noun_chunks', 'merge_entities',
+        'merge_subtokens']
+    try :
+      spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)
+
+    except :
+       #### Very hacky to get Glove Data 
+       log( f"Download {lang}")
+       os.system( f"python -m spacy download {lang}")
+       sleep(60)
+       spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)  
+
+
+    def tokenizer(text):
+        return [tok.text for tok in spacy_en.tokenizer(text)]
+
+    # Creating field for text and label
+    TEXT = Field(sequential=True, tokenize=tokenizer, lower=True)
+    LABEL = Field(sequential=False)
+
+    print('Preprocessing the text...')
+    # clean the text
+    TEXT.preprocessing = torchtext.data.Pipeline(clean_str)
+
+    print('Creating tabular datasets...It might take a while to finish!')
+    train_datafield = [('text', TEXT), ('label', LABEL)]
+    tabular_train = TabularDataset(
+        path=path_train, format='csv',
+        skip_header=True, fields=train_datafield)
+
+    valid_datafield = [('text', TEXT), ('label', LABEL)]
+
+    tabular_valid = TabularDataset(path=path_valid, 
+                                   format='csv',
+                                   skip_header=True,
+                                   fields=valid_datafield)
+
+    print('Building vocaulary...')
+    TEXT.build_vocab(tabular_train, vectors=pretrained_emb)
+    LABEL.build_vocab(tabular_train)
+
+    return tabular_train, tabular_valid, TEXT.vocab
+
+
+
+
+def create_tabular_dataset(path_train, path_valid, 
+                           lang='en', pretrained_emb='glove.6B.300d'):
+
+    disable = [
+        'tagger', 'parser', 'ner', 'textcat'
+        'entity_ruler', 'sentencizer', 
+        'merge_noun_chunks', 'merge_entities',
+        'merge_subtokens']
+    try :
+      spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)
+
+    except :
+       log( f"Download {lang}")
+       os.system( f"python -m spacy download {lang}")
+       sleep(60)
+       spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)  
+
+
+    def tokenizer(text):
+        return [tok.text for tok in spacy_en.tokenizer(text)]
+
+    # Creating field for text and label
+    TEXT = Field(sequential=True, tokenize=tokenizer, lower=True)
+    LABEL = Field(sequential=False)
+
+    print('Preprocessing the text...')
+    # clean the text
+    TEXT.preprocessing = torchtext.data.Pipeline(clean_str)
+
+    print('Creating tabular datasets...It might take a while to finish!')
+    train_datafield = [('text', TEXT), ('label', LABEL)]
+    tabular_train = TabularDataset(
+        path=path_train, format='csv',
+        skip_header=True, fields=train_datafield)
+
+    valid_datafield = [('text', TEXT), ('label', LABEL)]
+
+    tabular_valid = TabularDataset(path=path_valid, 
+                                   format='csv',
+                                   skip_header=True,
+                                   fields=valid_datafield)
+
+    print('Building vocaulary...')
+    TEXT.build_vocab(tabular_train, vectors=pretrained_emb)
+    LABEL.build_vocab(tabular_train)
+
+    return tabular_train, tabular_valid, TEXT.vocab
 
 
 
