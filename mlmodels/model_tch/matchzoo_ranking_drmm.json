@@ -2,57 +2,65 @@
     "train": {
         "model_pars": {
             "task": "ranking",
-            "loss": {
-                "RankHingeLoss" : {}
+            "loss" : {
+                "RankCrossEntropyLoss" : {"num_neg" : 10}
             },
             "metrics": {
                 "NormalizedDiscountedCumulativeGain" : {"k" : 3}, 
                 "NormalizedDiscountedCumulativeGain" : {"k" : 5},
                 "MeanAveragePrecision" : {}
             },
-            "model": "BERT",
+            "model": "DRMM",
             "params" : {
-                "mode": "bert-base-uncased",
-                "dropout_rate": 0.2
-            }
+                "glove_embedding_matrix_dim" : 300,
+                "mask_value" : 0,
+                "hist_bin_size" : 30,
+                "mlp_num_layers" : 1,
+                "mlp_num_units" : 10,
+                "mlp_num_fan_out" : 1,
+                "mlp_activation_func" : "tanh"
+            }  
         },
+
         "data_pars" :{
+            "num_classes": 2,
             "dataset": "WIKI_QA",
             "data_path": "dataset/nlp/",
-            "preprocess" : {
+            "preprocess": {
                 "train" : {
-                    "transform" : true,
+                    "fit_transform" : true,
                     "mode" : "pair",
-                    "num_dup" : 2,
-                    "num_neg" : 1,
+                    "num_dup" : 5,
+                    "num_neg" : 10,
+                    "dataset_callback" : "HISTOGRAM",
+                    "glove_embedding_matrix_dim" : 300,
+                    "device" : "cpu",
                     "batch_size" : 20,
                     "stage" : "train",
                     "resample" : true,
-                    "sort" : false,
                     "dataloader_callback" : "PADDING"
                 },
                 "test" : {
                     "transform" : true,
+                    "filter" : true,
+                    "dataset_callback" : "HISTOGRAM",
                     "batch_size" : 20,
                     "stage" : "dev",
                     "dataloader_callback" : "PADDING"
                 }
             }
         },
-
         "compute_pars": {
-            "optimizer" : {
-                "ADAMW" : {
-                    "lr" : 5e-5,
-                    "beta1": 0.9,
-                    "beta2": 0.98,
-                    "eps": 1e-8
+            "optimizer": {
+                "ADADELTA" : {
+                    "lr" : 1.0,
+                    "rho" : 0.9,
+                    "eps" : 1e-06,
+                    "weight_decay" : 0.0
                 }
             },
-            "optimize_parameters" : true,
             "epochs": 10
         },
-
         "out_pars": {
             "checkpointdir": "ztest/model_tch/MATCHZOO/BERT/checkpoints/",
             "path": "ztest/model_tch/MATCHZOO/BERT/"

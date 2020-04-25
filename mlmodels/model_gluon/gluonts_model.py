@@ -146,11 +146,11 @@ def fit(model, sess=None, data_pars=None, model_pars=None, compute_pars=None, ou
 def predict(model, sess=None, data_pars=None, compute_pars=None, out_pars=None, **kw):
     
     data_pars['train'] = False
-    test_ds = get_dataset(data_pars)
-    model_gluon = model.model
+    test_ds            = get_dataset(data_pars)
+    model_gluon        = model.model
     
     forecast_it, ts_it = make_evaluation_predictions(
-            dataset     = test_ds,  # test dataset
+            dataset     = test_ds,      # test dataset
             predictor   = model_gluon,  # predictor
             num_samples = compute_pars['num_samples'],  # number of sample paths we want for evaluation
         )

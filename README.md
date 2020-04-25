@@ -42,13 +42,13 @@ Here you can find usages [guide](https://github.com/arita37/mlmodels/blob/dev/ml
 
 1. Montreal AI, Nbeats: 2019, Advanced interpretable Time Series Neural Network, [[Link](https://arxiv.org/abs/1905.10437)]
 
-2. Amazon Deep AR: 2019, Multi-variate Time Series NNetwork, [[Link](https://arxiv.org/abs/1905.10437)]
+2. Amazon Deep AR: 2019, Multi-variate Time Series NNetwork, [[Link](https://ieeexplore.ieee.org/abstract/document/487783)]
 
-3. Facebook Prophet 2017, Time Series prediction,
+3. Facebook Prophet 2017, Time Series prediction [[Link]](http://www.macs.hw.ac.uk/~dwcorne/RSR/00279188.pdf)
 
-4. ARMDN, Advanced Multi-variate Time series Prediction : 2019, Associative and Recurrent Mixture Density Networks for time series.
+4. ARMDN, Advanced Multi-variate Time series Prediction : 2019, Associative and Recurrent Mixture Density Networks for time series. [[Link]](https://arxiv.org/pdf/1803.03800)
 
-5. LSTM Neural Network prediction
+5. LSTM Neural Network prediction : Stacked Bidirectional and Unidirectional LSTM Recurrent Neural Network for Network-wide Traffic Speed Prediction [[Link]](https://arxiv.org/ftp/arxiv/papers/1801/1801.02143.pdf)
 
 
 ### NLP:
@@ -313,7 +313,7 @@ git checkout dev
 ```
 
 ### (C) Using Colab :
-[Read-more](https://colab.research.google.com/drive/1sYbrXNZh9nTeizS-AuCA8RSu94B_B-RF)
+[Read-more](https://github.com/arita37/mlmodels/blob/dev/README_usage.md)
 
 
 ### Initialize template and Tests

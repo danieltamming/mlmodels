@@ -1,14 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
 def get_loader(fix_length, vocab_threshold, batch_size):
     train_dataset = SentimentDataset("data/train.csv", fix_length, vocab_threshold)
 

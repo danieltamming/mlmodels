@@ -1,6 +1,9 @@
 """"
 Related to images
 
+Examples :
+https://www.programcreek.com/python/example/104832/torchvision.transforms.Compose
+
 """
 import os
 import pandas as pd, numpy as np

@@ -1,37 +1,48 @@
 {
-    "test": {
+    "train": {
         "model_pars": {
-            "task": {
-                "classification" : {
-                    "num_classes" : 2
-                }
-            },
+            "task": "classification",
+            "num_classes": 2,
             "metrics": {"acc" : {}},
             "model": "BERT",
-            "pretrained": 0,
-            "embedding_output_dim": 100,
-            "mode": "bert-base-uncased",
-            "dropout_rate": 0.2
+            "params" : {
+                "mode": "bert-base-uncased",
+                "dropout_rate": 0.2
+            }
         },
-
         "data_pars" :{
             "dataset": "WIKI_QA",
             "data_path": "dataset/nlp/",
-            "mode" : "point",
-            "train_batch_size": 20,
-            "test_batch_size": 20
+            "preprocess" : {
+                "train" : {
+                    "transform" : true,
+                    "mode" : "point",
+                    "batch_size" : 20,
+                    "stage" : "train",
+                    "sort" : false,
+                    "dataloader_callback" : "PADDING"
+                },
+                "test" : {
+                    "transform" : true,
+                    "mode" : "point",
+                    "batch_size" : 20,
+                    "stage" : "dev",
+                    "sort" : false,
+                    "dataloader_callback" : "PADDING"
+                }
+            }
         },
-
         "compute_pars": {
-            "distributed": "mpi",
-            "max_batch_sample": 5,
-            "epochs": 10,
-            "learning_rate": 5e-5,
-            "beta1": 0.9,
-            "beta2": 0.98,
-            "eps": 1e-8,
-            "warmup_steps": 6,
-            "t_total": -1
+            "optimizer" : {
+                "ADAMW" : {
+                    "lr": 5e-5,
+                    "beta1": 0.9,
+                    "beta2": 0.98,
+                    "eps": 1e-8
+                }
+            },
+            "optimize_parameters" : true,
+            "epochs": 10
         },
 
         "out_pars": {

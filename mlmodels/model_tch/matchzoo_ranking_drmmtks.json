@@ -2,7 +2,7 @@
     "train": {
         "model_pars": {
             "task": "ranking",
-            "loss": {
+            "loss" : {
                 "RankHingeLoss" : {}
             },
             "metrics": {
@@ -10,18 +10,26 @@
                 "NormalizedDiscountedCumulativeGain" : {"k" : 5},
                 "MeanAveragePrecision" : {}
             },
-            "model": "BERT",
+            "model": "DRMMTKS",
             "params" : {
-                "mode": "bert-base-uncased",
-                "dropout_rate": 0.2
-            }
+                "glove_embedding_matrix_dim" : 100,
+                "mask_value" : 0,
+                "top_k" : 10,
+                "mlp_activation_func" : "tanh"
+            }  
         },
         "data_pars" :{
+            "num_classes": 2,
             "dataset": "WIKI_QA",
             "data_path": "dataset/nlp/",
-            "preprocess" : {
+            "preprocess": {
+                "basic_preprocessor" : {
+                    "truncated_length_left" : 10,
+                    "truncated_length_right" : 100,
+                    "filter_low_freq" : 2
+                },
                 "train" : {
-                    "transform" : true,
+                    "fit_transform" : true,
                     "mode" : "pair",
                     "num_dup" : 2,
                     "num_neg" : 1,
@@ -33,26 +41,24 @@
                 },
                 "test" : {
                     "transform" : true,
+                    "filter" : true,
                     "batch_size" : 20,
                     "stage" : "dev",
                     "dataloader_callback" : "PADDING"
                 }
             }
         },
-
         "compute_pars": {
-            "optimizer" : {
-                "ADAMW" : {
-                    "lr" : 5e-5,
-                    "beta1": 0.9,
-                    "beta2": 0.98,
-                    "eps": 1e-8
+            "optimizer": {
+                "ADADELTA" : {
+                    "lr" : 1.0,
+                    "rho" : 0.9,
+                    "eps" : 1e-06,
+                    "weight_decay" : 0.0
                 }
             },
-            "optimize_parameters" : true,
             "epochs": 10
         },
-
         "out_pars": {
             "checkpointdir": "ztest/model_tch/MATCHZOO/BERT/checkpoints/",
             "path": "ztest/model_tch/MATCHZOO/BERT/"
