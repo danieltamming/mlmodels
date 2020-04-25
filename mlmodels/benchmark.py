@@ -266,7 +266,7 @@ def main():
     elif arg.do == "text_classification":
         arg.data_path    = ""
         arg.dataset_name = ""
-        arg.path_json    = "dataset/json/benchmark_text_classification/"
+        arg.path_json    = "dataset/json/benchmark_text_classification/model_list_bench01.json"
         arg.path_out     = "example/benchmark/text_classification/"
 
         bench_pars = {"metric_list": ["accuracy_score"]}

@@ -7,6 +7,11 @@ TO DO :
 
 
 
+1) embeddings can be trainable or fixed  : True
+
+2) embedding are model data, not not split train/test 
+
+
 
 
 
@@ -196,6 +201,8 @@ def get_model_data(model_pars, data_pars):
 
 
 
+
+
 def text_create_tabular_dataset(path_train, path_valid,   lang='en', pretrained_emb='glove.6B.300d'):
     import spacy
     import torchtext
@@ -206,7 +213,7 @@ def text_create_tabular_dataset(path_train, path_valid,   lang='en', pretrained_
     import torchtext.datasets
     from time import sleep
     import re
-    
+
     def clean_str(string):
         """
         Tokenization/string cleaning for all datasets except for SST.
@@ -275,56 +282,6 @@ def text_create_tabular_dataset(path_train, path_valid,   lang='en', pretrained_
 
     return tabular_train, tabular_valid, TEXT.vocab
 
-
-
-
-def create_tabular_dataset(path_train, path_valid, 
-                           lang='en', pretrained_emb='glove.6B.300d'):
-
-    disable = [
-        'tagger', 'parser', 'ner', 'textcat'
-        'entity_ruler', 'sentencizer', 
-        'merge_noun_chunks', 'merge_entities',
-        'merge_subtokens']
-    try :
-      spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)
-
-    except :
-       log( f"Download {lang}")
-       os.system( f"python -m spacy download {lang}")
-       sleep(60)
-       spacy_en = spacy.load( f'{lang}_core_web_sm', disable= disable)  
-
-
-    def tokenizer(text):
-        return [tok.text for tok in spacy_en.tokenizer(text)]
-
-    # Creating field for text and label
-    TEXT = Field(sequential=True, tokenize=tokenizer, lower=True)
-    LABEL = Field(sequential=False)
-
-    print('Preprocessing the text...')
-    # clean the text
-    TEXT.preprocessing = torchtext.data.Pipeline(clean_str)
-
-    print('Creating tabular datasets...It might take a while to finish!')
-    train_datafield = [('text', TEXT), ('label', LABEL)]
-    tabular_train = TabularDataset(
-        path=path_train, format='csv',
-        skip_header=True, fields=train_datafield)
-
-    valid_datafield = [('text', TEXT), ('label', LABEL)]
-
-    tabular_valid = TabularDataset(path=path_valid, 
-                                   format='csv',
-                                   skip_header=True,
-                                   fields=valid_datafield)
-
-    print('Building vocaulary...')
-    TEXT.build_vocab(tabular_train, vectors=pretrained_emb)
-    LABEL.build_vocab(tabular_train)
-
-    return tabular_train, tabular_valid, TEXT.vocab
 
 
 
