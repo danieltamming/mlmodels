@@ -116,6 +116,7 @@ def get_dataset_torch(data_pars):
 
     # if using pretrained word embeddings
     if d.get('embed_name'):
+        # TODO make generic
         vec = torchtext.vocab.Vectors(d.get('embed_name'), url=d.get('embed_url', None))
     else:
         vec = None
