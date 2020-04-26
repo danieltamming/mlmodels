@@ -274,7 +274,7 @@ def test_single(data_path="dataset/", choice="", config_mode="test"):
     print(model_pars, data_pars, compute_pars, out_pars)
 
     log("#### Loading dataset   #############################################")
-    gluont_ds = get_dataset(data_pars)
+    gluonts_ds = get_dataset(data_pars)
 
     log("#### Model init, fit   #############################################")
     from mlmodels.models import module_load_full

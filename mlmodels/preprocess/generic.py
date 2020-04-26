@@ -287,6 +287,82 @@ def text_create_tabular_dataset(path_train, path_valid,   lang='en', pretrained_
 
 
 
+
+class numpyDataset(Dataset):
+    """
+    Defines a dataset composed of sentiment text and labels
+    Attributes:
+        X: numpy tensor of the path
+        y: numpy for labels
+        sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
+        data (list[int, [int]]): The data in the set
+
+
+    """
+   
+    def __init__(self,root="", train=True, transform=None, target_transform=None,
+                 download=False, data_pars=None, ):
+        import torch
+        import numpy as np
+        self.data_pars        = data_pars
+        self.transform        = transform
+        self.target_transform = target_transform
+        self.download         = download
+        d = data_pars
+
+
+        path = d['train_path'] if train else d['test_path']
+        #filename = d['X_filename'], d['y_filename']
+        #colX =d['colX']
+
+
+        # df = torch.load(os.path.join(path, filename))
+        X      = np.load(os.path.join(path, d['X_filename']))
+        labels = np.load(os.path.join(path, d['y_filename'] )) 
+        # self.X = X
+        # self.labels = labels
+
+
+        #### Split  ####################
+        #X = df[ colX ]
+        #labels = df[ d["coly"] ]
+
+
+        #### Compute sample weights from inverse class frequencies
+        class_sample_count = np.unique(labels, return_counts=True)[1]
+        weight = 1. / class_sample_count
+        self.samples_weight = torch.from_numpy(weight[labels])
+
+
+        #### Data Joining  ############
+        self.data = list(zip(X, labels))
+
+
+    def __len__(self):
+        return len(self.data)
+
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        X, target = self.data[index], int(self.targets[index])
+
+
+        if self.transform is not None:
+            X = self.transform(X)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return X, target
+
+
+
+
 class pandasDataset(Dataset):
     """
     Defines a dataset composed of sentiment text and labels
@@ -364,6 +440,50 @@ class pandasDataset(Dataset):
 
     def shuffle(self, random_state=123):
             self._df = self._df.sample(frac=1.0, random_state=random_state)
+
+
+
+
+
+
+
+
+
+
+def create_kerasDataloader():
+    """
+    keras dataloader
+    DataLoader for keras
+
+    Usage example
+    from mlmodels.preprocess.keras_dataloader.dataloader import DataGenerator as kerasDataloader
+    from mlmodels.preprocess.keras_dataloader.dataset import Dataset as kerasDataset
+
+
+    class TensorDataset(kerasDataset):
+
+        def __getitem__(self, index):
+            # time.sleep(np.random.randint(1, 3))
+            return np.random.rand(3), np.array([index])
+
+        def __len__(self):
+            return 100
+            
+    model = Sequential()
+    model.add(Dense(units=4, input_dim=3))
+    model.add(Dense(units=1))
+    model.compile('adam', loss='mse')
+
+    data_loader = kerasDataGenerator(TensorDataset(), batch_size=20, num_workers=0)
+
+    model.fit_generator(generator=data_loader, epochs=1, verbose=1)
+    """
+    #### Write someple
+    a= 1
+
+
+
+
 
 
 
