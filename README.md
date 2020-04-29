@@ -33,7 +33,6 @@ Here you can find usages [guide](https://github.com/arita37/mlmodels/blob/dev/ml
 *	[Time Series](#Time-series)
 *	[NLP](#NLP)
 *	[TABULAR](#TABULAR)
-*	[LightGBM](#LightGBM)
 *	[VISION](#VISION)
 
 
@@ -116,7 +115,7 @@ Here you can find usages [guide](https://github.com/arita37/mlmodels/blob/dev/ml
 
 ### TABULAR:
 
-#### LightGBM
+#### LightGBM  : Light Gradient Boosting
 
 #### AutoML Gluon  :  2020, AutoML in Gluon, MxNet using LightGBM, CatBoost
 

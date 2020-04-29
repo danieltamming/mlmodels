@@ -14,55 +14,6 @@ Match ZOO Architecture :
 
 
 
-class Trainer:
-            model: BaseModel,
-        optimizer: optim.Optimizer,
-        trainloader: DataLoader,
-        validloader: DataLoader,
-        device: typing.Union[torch.device, int, list, None] = None,
-        start_epoch: int = 1,
-        epochs: int = 10,
-        validate_interval: typing.Optional[int] = None,
-        scheduler: typing.Any = None,
-        clip_norm: typing.Union[float, int] = None,
-        patience: typing.Optional[int] = None,
-        key: typing.Any = None,
-        checkpoint: typing.Union[str, Path] = None,
-        save_dir: typing.Union[str, Path] = None,
-        save_all: bool = False,
-        verbose: int = 1,
-
-    MatchZoo tranier.
-    model: A :class:`BaseModel` instance.
-    optimizer: A :class:`optim.Optimizer` instance.
-    trainloader: A :class`DataLoader` instance. The dataloader
-        is used for training the model.
-    validloader: A :class`DataLoader` instance. The dataloader
-        is used for validating the model.
-    device: The desired device of returned tensor. Default:
-        if None, use the current device. If `torch.device` or int,
-        use device specified by user. If list, use data parallel.
-    start_epoch: Int. Number of starting epoch.
-    epochs: The maximum number of epochs for training.
-        Defaults to 10.
-    validate_interval: Int. Interval of validation.
-    scheduler: LR scheduler used to adjust the learning rate
-        based on the number of epochs.
-    clip_norm: Max norm of the gradients to be clipped.
-    patience: Number fo events to wait if no improvement and
-        then stop the training.
-    key: Key of metric to be compared.
-    checkpoint: A checkpoint from which to continue training.
-        If None, training starts from scratch. Defaults to None.
-        Should be a file-like object (has to implement read, readline,
-        tell, and seek), or a string containing a file name.
-    save_dir: Directory to save trainer.
-    save_all: Bool. If True, save `Trainer` instance; If False,
-        only save model. Defaults to False.
-    verbose: 0, 1, or 2. Verbosity mode. 0 = silent,
-        1 = verbose, 2 = one log line per epoch.
-
-
 
 """
 import os, json
@@ -233,7 +184,7 @@ def get_data_loader(model_name, preprocessor, preprocess_pars, raw_data):
     return dataloader
 
 
-
+"""
 def update_model_param(params, model, task, preprocessor):
     model.params['task'] = task
     glove_embedding_matrix_dim = params.get("glove_embedding_matrix_dim")
@@ -248,6 +199,7 @@ def update_model_param(params, model, task, preprocessor):
     # Feed rest all params directly to the model
     for key, value in params.items():
         model.params[key] = value
+"""
 
 
 def get_config_file():
@@ -416,9 +368,6 @@ def predict(model, session=None, data_pars=None, compute_pars=None, out_pars=Non
             self._model.train()
             return torch.cat(predictions, dim=0).numpy()
 
-
-
-
     """
 
     ### Data Loader        #####################################
@@ -472,8 +421,6 @@ def load(load_pars):
  
     """
     pass
-
-
 
 
 
@@ -554,4 +501,59 @@ def test_train(data_path, pars_choice, model_name):
 if __name__ == "__main__":
     test_train(data_path="model_tch/matchzoo_models.json", pars_choice="json", model_name="BERT_RANKING")
 
+    # test_train(data_path="model_tch/matchzoo_models.json", pars_choice="json", model_name="BERT_RANKING")
 
+
+
+
+"""
+class Trainer:
+            model: BaseModel,
+        optimizer: optim.Optimizer,
+        trainloader: DataLoader,
+        validloader: DataLoader,
+        device: typing.Union[torch.device, int, list, None] = None,
+        start_epoch: int = 1,
+        epochs: int = 10,
+        validate_interval: typing.Optional[int] = None,
+        scheduler: typing.Any = None,
+        clip_norm: typing.Union[float, int] = None,
+        patience: typing.Optional[int] = None,
+        key: typing.Any = None,
+        checkpoint: typing.Union[str, Path] = None,
+        save_dir: typing.Union[str, Path] = None,
+        save_all: bool = False,
+        verbose: int = 1,
+
+    MatchZoo tranier.
+    model: A :class:`BaseModel` instance.
+    optimizer: A :class:`optim.Optimizer` instance.
+    trainloader: A :class`DataLoader` instance. The dataloader
+        is used for training the model.
+    validloader: A :class`DataLoader` instance. The dataloader
+        is used for validating the model.
+    device: The desired device of returned tensor. Default:
+        if None, use the current device. If `torch.device` or int,
+        use device specified by user. If list, use data parallel.
+    start_epoch: Int. Number of starting epoch.
+    epochs: The maximum number of epochs for training.
+        Defaults to 10.
+    validate_interval: Int. Interval of validation.
+    scheduler: LR scheduler used to adjust the learning rate
+        based on the number of epochs.
+    clip_norm: Max norm of the gradients to be clipped.
+    patience: Number fo events to wait if no improvement and
+        then stop the training.
+    key: Key of metric to be compared.
+    checkpoint: A checkpoint from which to continue training.
+        If None, training starts from scratch. Defaults to None.
+        Should be a file-like object (has to implement read, readline,
+        tell, and seek), or a string containing a file name.
+    save_dir: Directory to save trainer.
+    save_all: Bool. If True, save `Trainer` instance; If False,
+        only save model. Defaults to False.
+    verbose: 0, 1, or 2. Verbosity mode. 0 = silent,
+        1 = verbose, 2 = one log line per epoch.
+
+
+"""

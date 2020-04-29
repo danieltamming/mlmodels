@@ -8,12 +8,13 @@ import os
 import json
 
 import numpy as np
-
+import pandas as pd
 import autokeras as ak
 
 from keras.models import load_model
 
 from tensorflow.keras.datasets import imdb
+from tensorflow.keras.datasets import mnist
 
 
 
@@ -22,7 +23,7 @@ MODEL_URI = get_model_uri(__file__)
 
 
 def get_config_file():
-    return os.path.join(os_package_root_path(__file__, 1), 'config', 'model_tch', 'Imagecnn.json')
+    return os.path.join(os_package_root_path(__file__, 1), 'config', 'model_keras', 'Imagecnn.json')
 
 
 ###########################################################################################################
@@ -37,7 +38,15 @@ class Model:
 
         # Initialize the text classifier.
         # It tries n different models.
-        self.model = ak.TextClassifier(max_trials=model_pars['max_trials'])
+        if model_pars["model_name"] == "text":
+            # Initialize the TextClassifier
+            self.model = ak.TextClassifier(max_trials=model_pars['max_trials'])
+        elif model_pars["model_name"] == "vision":
+            # Initialize the ImageClassifier.
+            self.model = ak.ImageClassifier(max_trials=model_pars['max_trials'])
+        elif model_pars["model_name"] == "tabular_classifier":
+            # Initialize the classifier.
+            self.model = ak.StructuredDataClassifier(max_trials=model_pars['max_trials'])
 
 
 def get_params(param_pars=None, **kw):
@@ -85,15 +94,36 @@ def get_dataset_imbd(data_pars):
     x_test = np.array(x_test, dtype=np.str)
     return x_train, y_train, x_test, y_test
 
+def get_dataset_titanic(data_pars): 
+    # Preparing training data.
+    train_data_path  = data_pars['train_data_path']
+    test_data_path = data_pars['test_data_path']
+    train_data_path  = path_norm( train_data_path )
+    test_data_path = path_norm( test_data_path )
+    x_train = pd.read_csv(train_data_path)
+    y_train = x_train.pop('survived')
+    # Preparing testing data.
+    x_test = pd.read_csv(test_data_path)
+    y_test = x_test.pop('survived')
+    return x_train, y_train, x_test, y_test
+
+
 
 def get_dataset(data_pars=None):
+
     if data_pars['dataset'] == 'IMDB':
         x_train, y_train, x_test, y_test = get_dataset_imbd(data_pars)
-        return x_train, y_train, x_test, y_test
-
+        
+    elif data_pars['dataset'] == "MNIST":
+        (x_train, y_train), (x_test, y_test)  = mnist.load_data()
+        
+    elif data_pars['dataset'] == "Titanic Survival Prediction":
+        x_train, y_train, x_test, y_test = get_dataset_titanic(data_pars)
+        
     else:
         raise Exception("Dataloader not implemented")
         exit
+    return x_train, y_train, x_test, y_test
 
 
 def fit(model, data_pars=None, compute_pars=None, out_pars=None, **kwargs):
@@ -101,41 +131,39 @@ def fit(model, data_pars=None, compute_pars=None, out_pars=None, **kwargs):
     print(type(x_train))
     print(type(y_train))
     os.makedirs(out_pars["checkpointdir"], exist_ok=True)
-    model.model.fit(x_train,
+    model.fit(x_train,
               y_train,
-              epochs=compute_pars["epochs"],
-              # Split the training data and use the last 15% as validation data.
-              validation_split=data_pars["validation_split"])
+              # Split the training data and use aportion as validation data.
+              validation_split=data_pars["validation_split"],
+              epochs=compute_pars['epochs']
+              )
 
-    return model, None
+    return model
 
 
-def predict(model, session=None, data_pars=None, compute_pars=None, out_pars=None, **kwargs):
+def predict(model, session=None, data_pars=None, compute_pars=None, out_pars=None):
     # get a batch of data
     _, _, x_test, y_test = get_dataset(data_pars)
-    predicted_y = model.model.predict(x_test)
-    if kwargs.get("return_ytrue"):
-        return predicted_y, y_test
-    else:
-        return predicted_y, None
+    predicted_y = model.predict(x_test)
+    return predicted_y
 
 
 def fit_metrics(model, data_pars=None, compute_pars=None, out_pars=None):
     _, _, x_test, y_test = get_dataset(data_pars)
-    return model.model.evaluate(x_test, y_test)
+    return model.evaluate(x_test, y_test)
 
 
-def save(model, session=None, save_pars=None):
-    model.save(os.path.join(save_pars["checkpointdir"],'autokeras_classifier_model.h5'))
+def save(model, session=None, save_pars=None,config_mode="test"):
+    model.save(os.path.join(save_pars["checkpointdir"],f'{config_mode}.h5'))
 
 
-def load(load_pars):
-    return load_model(os.path.join(load_pars["checkpointdir"],'autokeras_classifier_model.h5'), custom_objects=ak.CUSTOM_OBJECTS)
+def load(load_pars,config_mode="test"):
+    return load_model(os.path.join(load_pars["checkpointdir"],f'{config_mode}.h5'), custom_objects=ak.CUSTOM_OBJECTS)
 
 
 ###########################################################################################################
 ###########################################################################################################
-def test(data_path="dataset/", pars_choice="json", config_mode="test"):
+def test_single(data_path="dataset/", pars_choice="json", config_mode="test"):
     ### Local test
 
     log("#### Loading params   ##############################################")
@@ -148,10 +176,10 @@ def test(data_path="dataset/", pars_choice="json", config_mode="test"):
 
     log("#### Model init, fit   #############################################")
     model = Model(model_pars, data_pars, compute_pars)
-    fitted_model = fit(model, data_pars, compute_pars, out_pars)
+    fitted_model = fit(model.model, data_pars, compute_pars, out_pars)
 
     log("#### Predict   #####################################################")
-    ypred, _ = predict(fitted_model, data_pars=data_pars, compute_pars=compute_pars, out_pars=out_pars)
+    ypred = predict(fitted_model, data_pars, compute_pars, out_pars)
     print(ypred[:10])
 
     log("#### metrics   #####################################################")
@@ -162,13 +190,25 @@ def test(data_path="dataset/", pars_choice="json", config_mode="test"):
 
     log("#### Save/Load   ###################################################")
     ## Export as a Keras Model.
-    fitted_model = fitted_model.model
     save_model = fitted_model.export_model()
-    save(model=save_model, save_pars=out_pars)
-    loaded_model = load( out_pars )
+    save(model=save_model, save_pars=out_pars, config_mode=config_mode)
+    loaded_model = load( out_pars, config_mode)
     ypred = predict(loaded_model, data_pars=data_pars, compute_pars=compute_pars, out_pars=out_pars)
     print(ypred[:10])
 
 
-if __name__ == "__main__":
-    test(data_path="model_keras/autokeras_classifier.json", pars_choice="json", config_mode="test")
+
+    
+
+def test() :
+    ll = [ "vision" , "text" , "tabular_classifier" ]
+
+    for t in ll  :
+        test_single(data_path="model_keras/Autokeras.json", pars_choice="json", config_mode=t)
+
+
+
+if __name__ == '__main__':
+    VERBOSE = False
+
+    test()

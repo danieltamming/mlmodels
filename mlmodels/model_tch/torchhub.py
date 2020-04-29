@@ -193,7 +193,7 @@ def fit(model, data_pars=None, compute_pars=None, out_pars=None, **kwargs):
     test_loss     = []
     test_acc      = []
     best_test_acc = -1
-
+    
     optimizer     = optim.Adam(model0.parameters(), lr=lr)
     train_iter, valid_iter = get_dataset(data_pars)
 
