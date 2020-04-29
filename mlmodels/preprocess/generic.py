@@ -114,15 +114,6 @@ def get_dataset_torch(data_pars):
     from torch.utils.data import DataLoader
     d = data_pars
 
-    # if using pretrained word embeddings
-    if d.get('embed_name'):
-        # TODO make generic
-        vec = torchtext.vocab.Vectors(d.get('embed_name'), url=d.get('embed_url', None))
-    else:
-        vec = None
-    print(vec.__dict__.keys())
-    exit()
-
     transform = None
     if  len(data_pars.get("transform_uri", ""))  > 1 :
        transform = load_function( d.get("transform_uri", "mlmodels.preprocess.image:torch_transform_mnist" ))()
@@ -185,7 +176,8 @@ def get_model_data(model_pars, data_pars):
 
 
     #### from mlmodels.preprocess.text import embeddingLoader
-    dset = load_function(d.get("embedding", "torchtext.embedding:glove") )
+    # dset = load_function(d.get("embedding", "torchtext.embedding:glove") )
+    dset = load_function(d.get('embedding', 'mlmodels.preprocess.text:embeddingLoader'))
 
     data = None
     if len(d.get('embedding_path', "")) > 1 :
@@ -195,7 +187,7 @@ def get_model_data(model_pars, data_pars):
 
     else :
         ###### Pre Built Dataset available  #############################################
-        data    = dset(d['embedding_path'], train=True, download=True, transform= transform)
+        data    = dset('', train=True, download=True, transform= transform)
 
 
     return data
@@ -586,13 +578,16 @@ def tf_dataset(dataset_pars):
 ########################################################################################
 ########################################################################################
 def test(data_path="dataset/", pars_choice="json", config_mode="test"):
-    ### Local test
-
-    log("#### Loading params   ##############################################")
-
-
-
-if __name__ == "__main__":
+    model_pars = {
+        'embedding_path': '.vector_cache/',
+        'embedding_url': 'https://nlp.stanford.edu/data/glove.6B.zip',
+        'embedding_name': 'glove.6B.300d.txt',
+    }
+    data_pars = {
+    }
+    get_model_data(model_pars, data_pars)
+    exit()
+    
     data_pars = {
         'transform': False,
         'train_path': False,
@@ -619,7 +614,15 @@ if __name__ == "__main__":
         print(y)
         break
     exit()
-    # test(data_path="model_tch/file.json", pars_choice="json", config_mode="test")
+
+    ### Local test
+
+    log("#### Loading params   ##############################################")
+
+
+
+if __name__ == "__main__":
+    test(data_path="model_tch/file.json", pars_choice="json", config_mode="test")
 
 
 
