@@ -1,17 +1,9 @@
 """"
 Related to data procesisng
-
 TO DO :
    Normalize datasetloader and embedding loading
-
-
 1) embeddings can be trainable or fixed  : True
 2) embedding are model data, not not split train/test 
-
-
-
-
-
 """
 import os
 from pathlib import Path
@@ -39,14 +31,10 @@ def load_function(uri_name="path_norm"):
   """
     ##### Pandas CSV case : Custom MLMODELS One
     "dataset"        : "mlmodels.preprocess.generic:pandasDataset"
-
     ##### External File processor :
     "dataset"        : "MyFolder/preprocess/myfile.py:pandasDataset"
-
       Absolute drive path
      "MyFolder/mlmodels/preprocess/generic.py:pandasDataset"
-
-
   """  
   import importlib, sys
   from pathlib import Path
@@ -81,33 +69,22 @@ def get_dataset_torch(data_pars):
       torchvison.datasets
          MNIST Fashion-MNIST KMNIST EMNIST QMNIST  FakeData COCO Captions Detection LSUN ImageFolder DatasetFolder 
          ImageNet CIFAR STL10 SVHN PhotoTour SBU Flickr VOC Cityscapes SBD USPS Kinetics-400 HMDB51 UCF101 CelebA
-
       torchtext.datasets
          Sentiment Analysis:    SST IMDb Question Classification TREC Entailment SNLI MultiNLI 
          Language Modeling:     WikiText-2 WikiText103  PennTreebank 
          Machine Translation :  Multi30k IWSLT WMT14 
          Sequence Tagging    :  UDPOS CoNLL2000Chunking 
          Question Answering  :  BABI20
-
-
     ##### MNIST case : TorchVison TorchText Pre-Built
     "dataset"       : "torchvision.datasets:MNIST"
     "transform_uri" : "mlmodels.preprocess.image:torch_transform_mnist"
-
-
     ##### Pandas CSV case : Custom MLMODELS One
     "dataset"        : "mlmodels.preprocess.generic:pandasDataset"
     "transform_uri"  : "mlmodels.preprocess.text:torch_fillna"
-
-
     ##### External File processor :
     "dataset"        : "MyFolder/preprocess/myfile.py:pandasDataset"
     "transform_uri"  : "MyFolder/preprocess/myfile.py:torch_fillna"
-
-
     """
-    import torch
-    import torchtext
     from torch.utils.data import DataLoader
     d = data_pars
 
@@ -149,13 +126,10 @@ def get_dataset_keras(data_pars):
     #### Write someple
     from mlmodels.preprocess.keras_dataloader.dataloader import DataGenerator as kerasDataloader
     from mlmodels.preprocess.keras_dataloader.dataset import Dataset as kerasDataset
-
     class TensorDataset(kerasDataset):
-
         def __getitem__(self, index):
             # time.sleep(np.random.randint(1, 3))
             return np.random.rand(3), np.array([index])
-
         def __len__(self):
             return 100
             
@@ -163,28 +137,18 @@ def get_dataset_keras(data_pars):
     #model.add(Dense(units=4, input_dim=3))
     #model.add(Dense(units=1))
     #model.compile('adam', loss='mse')
-
     data_loader = kerasDataloader(TensorDataset(), batch_size=20, num_workers=0)
-
     return data_loader
     # model.fit_generator(generator=data_loader, epochs=1, verbose=1)
-
-
     ##### MNIST case : TorchVison TorchText Pre-Built
     "dataset"       : "torchvision.datasets:MNIST"
     "transform_uri" : "mlmodels.preprocess.image:torch_transform_mnist"
-
-
     ##### Pandas CSV case : Custom MLMODELS One
     "dataset"        : "mlmodels.preprocess.generic:pandasDataset"
     "transform_uri"  : "mlmodels.preprocess.text:torch_fillna"
-
-
     ##### External File processor :
     "dataset"        : "MyFolder/preprocess/myfile.py:pandasDataset"
     "transform_uri"  : "MyFolder/preprocess/myfile.py:torch_fillna"
-
-
     """
     from mlmodels.preprocess.keras_dataloader.dataloader import DataGenerator as kerasDataLoader
     d = data_pars
@@ -224,24 +188,16 @@ def get_dataset_keras(data_pars):
 def get_model_embedding(model_pars, data_pars):
     """"
       Mostly Embedding data, it can be external data used in the model.
-
       INDEPENDANT OF Framework BUT Follows PyTorch Logic
-
     ##### MNIST case : TorchVison TorchText Pre-Built
     "dataset"       : "torchvision.datasets:MNIST"
     "transform_uri" : "mlmodels.preprocess.image:torch_transform_mnist"
-
-
     ##### Pandas CSV case : Custom MLMODELS One
     "dataset"        : "mlmodels.preprocess.generic:pandasDataset"
     "transform_uri"  : "mlmodels.preprocess.text:torch_fillna"
-
-
     ##### External File processor :
     "dataset"        : "MyFolder/preprocess/myfile.py:pandasDataset"
     "transform_uri"  : "MyFolder/preprocess/myfile.py:torch_fillna"
-
-
     """
     d = model_pars
 
@@ -262,7 +218,7 @@ def get_model_embedding(model_pars, data_pars):
 
     else :
         ###### Pre Built Dataset available  #############################################
-        data    = dset('', train=True, download=True, transform= transform)
+        data    = dset(d['embedding_path'], train=True, download=True, transform= transform)
 
 
     return data
@@ -361,7 +317,6 @@ from PIL import Image
 class NumpyDataset(Dataset):
     """
     Defines a dataset composed of Features and labels
-
     Attributes:
         data_pars{
             data_path: the folder path that it cotains numpy files
@@ -369,7 +324,6 @@ class NumpyDataset(Dataset):
             features_key: the key of features ex: n = {"features_name":"data}; n["features_name"]
             classes_key: the key of classes
             transforms: operation you wanna apply on image
-
             example:
                 dataset_pars = {'data_path': 'mlmodels/dataset/vision/cifar10/', 
                                     'filename':'cifar10_train.npz',
@@ -424,6 +378,7 @@ class NumpyDataset(Dataset):
 
     def __len__(self):
         return len(self.features)
+
 
 class pandasDataset(Dataset):
     """
@@ -494,84 +449,6 @@ class pandasDataset(Dataset):
     def shuffle(self, random_state=123):
             self._df = self._df.sample(frac=1.0, random_state=random_state)
 
-class pandasDataset_daniel(Dataset):
-    """
-    Defines a dataset composed of sentiment text and labels
-    Attributes:
-        df (Dataframe): Dataframe of the CSV from the path
-        sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
-        data (list[int, [int]]): The data in the set
-    """
-   
-    def __init__(self,root="", train=True, transform=None, target_transform=None,
-                 download=False, data_pars=None, ):
-        import torch
-        self.data_pars        = data_pars
-        self.transform        = transform
-        self.target_transform = target_transform
-        self.download         = download
-        d = data_pars
-
-        if train:
-            path = d['train_path']
-            filename = d['train_filename']
-        else:
-            path = d['test_path']
-            filename = d['test_filename']
-            
-        header = None if d.get('no_header') else 'infer'
-        df = pd.read_csv(os.path.join(path, filename), header=header)
-        self.df = df
-
-        #### Split  ####################
-        colX = d.get('colX', 1)
-        coly = d.get('coly', 0)
-        X = df[colX] if isinstance(colX, str) else df.iloc[:, colX]
-        labels = df[coly] if isinstance(coly, str) else df.iloc[:, coly]
-        # X = df[ [colX] ]
-        # labels = df[ [coly] ]
-
-        #### Compute sample weights from inverse class frequencies
-        classes, class_sample_count = np.unique(labels, return_counts=True)
-        weight = 1. / class_sample_count
-        weights_map = dict(zip(classes.tolist(), weight.tolist()))
-        samples_weight_df = labels.map(weights_map)
-        self.samples_weight = torch.from_numpy(samples_weight_df.values)
-
-
-        #### Data Joining  ############
-        self.data = list(zip(X, labels))
-
-
-    def __len__(self):
-        return len(self.data)
-
-
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (text, target) where target is index of the target class.
-        """
-        # X, target = self.data[index], int(self.targets[index])
-        X, target = self.data[index]
-        # print(X)
-        # print(target)
-        # exit()
-
-
-        if self.transform is not None:
-            X = self.transform(X)
-
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-
-        return X, target
-
-    def shuffle(self, random_state=123):
-            self._df = self._df.sample(frac=1.0, random_state=random_state)
-
 
 
 
@@ -580,18 +457,13 @@ def create_kerasDataloader():
     """
     keras dataloader
     DataLoader for keras
-
     Usage example
     from mlmodels.preprocess.keras_dataloader.dataloader import DataGenerator as kerasDataloader
     from mlmodels.preprocess.keras_dataloader.dataset import Dataset as kerasDataset
-
-
     class TensorDataset(kerasDataset):
-
         def __getitem__(self, index):
             # time.sleep(np.random.randint(1, 3))
             return np.random.rand(3), np.array([index])
-
         def __len__(self):
             return 100
             
@@ -599,9 +471,7 @@ def create_kerasDataloader():
     model.add(Dense(units=4, input_dim=3))
     model.add(Dense(units=1))
     model.compile('adam', loss='mse')
-
     data_loader = kerasDataGenerator(TensorDataset(), batch_size=20, num_workers=0)
-
     model.fit_generator(generator=data_loader, epochs=1, verbose=1)
     """
     #### Write someple
@@ -740,6 +610,86 @@ def tf_dataset_download(data_pars):
     np.savez_compressed(os.path.join(out_path + f"{name}_test"), X = Xtemp, y = ytemp)
         
     log(out_path, os.listdir( out_path ))
+
+class pandasDataset_daniel(Dataset):
+    """
+    Defines a dataset composed of sentiment text and labels
+    Attributes:
+        df (Dataframe): Dataframe of the CSV from the path
+        sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
+        data (list[int, [int]]): The data in the set
+    """
+   
+    def __init__(self,root="", train=True, transform=None, target_transform=None,
+                 download=False, data_pars=None, ):
+        import torch
+        self.data_pars        = data_pars
+        self.transform        = transform
+        self.target_transform = target_transform
+        self.download         = download
+        d = data_pars
+
+        if train:
+            path = d['train_path']
+            filename = d['train_filename']
+        else:
+            path = d['test_path']
+            filename = d['test_filename']
+            
+        header = None if d.get('no_header') else 'infer'
+        df = pd.read_csv(os.path.join(path, filename), header=header)
+        self.df = df
+
+        #### Split  ####################
+        colX = d.get('colX', 1)
+        coly = d.get('coly', 0)
+        X = df[colX] if isinstance(colX, str) else df.iloc[:, colX]
+        labels = df[coly] if isinstance(coly, str) else df.iloc[:, coly]
+        # X = df[ [colX] ]
+        # labels = df[ [coly] ]
+
+        #### Compute sample weights from inverse class frequencies
+        classes, class_sample_count = np.unique(labels, return_counts=True)
+        weight = 1. / class_sample_count
+        weights_map = dict(zip(classes.tolist(), weight.tolist()))
+        samples_weight_df = labels.map(weights_map)
+        self.samples_weight = torch.from_numpy(samples_weight_df.values)
+
+
+        #### Data Joining  ############
+        self.data = list(zip(X, labels))
+
+
+    def __len__(self):
+        return len(self.data)
+
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (text, target) where target is index of the target class.
+        """
+        # X, target = self.data[index], int(self.targets[index])
+        X, target = self.data[index]
+        # print(X)
+        # print(target)
+        # exit()
+
+
+        if self.transform is not None:
+            X = self.transform(X)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return X, target
+
+    def shuffle(self, random_state=123):
+            self._df = self._df.sample(frac=1.0, random_state=random_state)
+
+
         
       
 
@@ -754,7 +704,16 @@ def test(data_path="dataset/", pars_choice="json", config_mode="test"):
 def test_01(verbose=False):
     data_pars_list = [
         {
-
+            'dataset': 'mlmodels.preprocess.generic:pandasDataset_daniel',
+            'train_batch_size': 16,
+            'test_batch_size': 16,
+            'train_path': 'mlmodels/dataset/text/ag_news_csv/',
+            'test_path': 'mlmodels/dataset/text/ag_news_csv/',
+            'filename': 'train.csv',
+            'train_filename': 'train.csv',
+            'test_filename': 'test.csv',
+            'colX': 1,
+            'coly': 0,
         },
         {
             'dataset': 'mlmodels.preprocess.generic:pandasDataset',
