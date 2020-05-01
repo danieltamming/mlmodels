@@ -4,7 +4,6 @@ Models are stored in model_XX/  or in folder XXXXX
     module :  folder/mymodel.py, contains the methods, operations.
     model  :  Class in mymodel.py containing the model definition, compilation
    
-
 models.py   #### Generic Interface
    module_load(model_uri)
    model_create(module)
@@ -14,10 +13,7 @@ models.py   #### Generic Interface
    save(save_pars)
    load(load_pars)
  
-
 ######### Command line sample  #####################################################################
-
-
 """
 import argparse
 import glob
@@ -165,6 +161,48 @@ def save(module, model, session, save_pars, **kwarg):
     return module.save(model, session, save_pars, **kwarg)
 
 
+
+####################################################################################################
+########  CLI ######################################################################################
+
+def fit_cli(model_name, config_file, config_mode, save_folder):
+    model_p, data_p, compute_p, out_p = config_get_pars(config_file, config_mode)
+    module = module_load(model_name)
+    model = model_create(module, model_p, data_p, compute_p)
+    log("Fit")
+    model, sess = module.fit(model, data_pars=data_p, compute_pars=compute_p, out_pars=out_p)
+    log("Save")
+    save_pars = {"path": f"{save_folder}/{model_name}", "model_uri": model_name}
+    save(save_pars, model, sess)
+
+
+
+
+
+def predict_cli(model_name, config_file, config_mode, save_folder) :
+    model_p, data_p, compute_p, out_p = config_get_pars(config_file, config_mode)
+    load_pars = {"path": f"{save_folder}/{model_name}", "model_uri": model_name}
+    module = module_load(model_p[".model_uri"])
+    model, session = load(load_pars)
+    module.predict(model, session, data_pars=data_p, compute_pars=compute_p, out_pars=out_p)
+
+
+
+def test_cli(model_name, params):
+    # Name as argument as must entered by user,
+    # params are optional. Would take default params
+    # if user didn;t mention explictly
+    test(model_name)
+    # both of these are same thus, test are running two times.
+    # one is implemented in models.py and one is implemented
+    # individually in each model.
+    param_pars = {"choice": "test01", "data_path": "", "config_mode": "test"}
+    test_module(model_name, param_pars=param_pars)
+
+
+
+
+
 ####################################################################################################
 ####################################################################################################
 def test_all(folder=None):
@@ -203,6 +241,9 @@ def test_global(modelname):
         del module
     except Exception as e:
         print("Failed", e)
+
+
+
 
 
 def test_api(model_uri="model_xxxx/yyyy.py", param_pars=None):
@@ -301,7 +342,6 @@ def config_generate_json(modelname, to_path="ztest/new_model/"):
     """
       Generate config file from code source
       config_init("model_tf.1_lstm", to_folder="ztest/")
-
     """
     os.makedirs(to_path, exist_ok=True)
     ##### JSON file
@@ -488,3 +528,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+

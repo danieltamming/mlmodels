@@ -28,7 +28,7 @@ jobs:
            git config --global hub.protocol ssh
            bin/hub pull-request --base arita37:feat_dataloader   --head arita37:dev  -m "Auto Sync arita37/Dev"  & \
            bin/hub pull-request --base AsmaDamani:asma_damani  --head arita37:dev   -m "Auto Sync arita37/Dev"  & \
-           bin/hub pull-request --base pushkalkatara:matchzoo_mlmodels  --head arita37:dev   -m "Auto Sync arita37/Dev"  & \
+           bin/hub pull-request --base pushkalkatara:dev  --head arita37:dev   -m "Auto Sync arita37/Dev"  & \
            bin/hub pull-request --base arita37:vantam   --head arita37:dev  -m "Auto Sync arita37/Dev"  & \         
            bin/hub pull-request --base MUmarAmanat:keras_armdn  --head arita37:dev   -m "Auto Sync arita37/Dev"  & \
            bin/hub pull-request --base OmarOsman:dev  --head arita37:dev   -m "Auto Sync arita37/Dev"  & \

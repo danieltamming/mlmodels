@@ -105,7 +105,7 @@ packages = ["mlmodels"] + ["mlmodels." + p for p in find_packages("mlmodels")]
 """
 scripts = [ "mlmodels/models.py",
             "mlmodels/optim.py",
-            "mlmodels/cli_mlmodels",     
+            "mlmodels/",     
             ]
 
 
@@ -131,7 +131,7 @@ setup(
     description="Generic model API, Model Zoo in Tensorflow, Keras, Pytorch, Hyperparamter search",
     keywords='Machine Learning Interface library',
     
-    author="Kevin Noel",
+    author="Kevin Noel, al",
     author_email="brookm291@gmail.com",
     url="https://github.com/arita37/mlmodels",
     
@@ -139,6 +139,8 @@ setup(
     python_requires='>=3.6',
     
     packages=packages,
+
+    include_package_data=True,
     
     #### CLI
     scripts = scripts,
@@ -148,7 +150,7 @@ setup(
     
     long_description=long_description,
     long_description_content_type="text/markdown",
-    include_package_data=False,
+
 
     classifiers=[
           'Development Status :: 3 - Alpha',
