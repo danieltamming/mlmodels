@@ -425,8 +425,76 @@ class NumpyDataset(Dataset):
     def __len__(self):
         return len(self.features)
 
-
 class pandasDataset(Dataset):
+    """
+    Defines a dataset composed of sentiment text and labels
+    Attributes:
+        df (Dataframe): Dataframe of the CSV from teh path
+        sample_weights(ndarray, shape(len(labels),)): An array with each sample_weight[i] as the weight of the ith sample
+        data (list[int, [int]]): The data in the set
+    """
+   
+    def __init__(self,root="", train=True, transform=None, target_transform=None,
+                 download=False, data_pars=None, ):
+        import torch
+        self.data_pars        = data_pars
+        self.transform        = transform
+        self.target_transform = target_transform
+        self.download         = download
+        d = data_pars
+
+
+        path = d['train_path'] if train else d['test_path']
+        filename = d['filename']
+        colX =d['colX']
+
+
+        # df = torch.load(os.path.join(path, filename))
+        df = pd.read_csv(os.path.join(path, filename))
+        self.df = df
+
+
+        #### Split  ####################
+        X = df[ colX ]
+        labels = df[ d["coly"] ]
+
+
+        #### Compute sample weights from inverse class frequencies
+        class_sample_count = np.unique(labels, return_counts=True)[1]
+        weight = 1. / class_sample_count
+        self.samples_weight = torch.from_numpy(weight[labels])
+
+
+        #### Data Joining  ############
+        self.data = list(zip(X, labels))
+
+
+    def __len__(self):
+        return len(self.data)
+
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        X, target = self.data[index], int(self.targets[index])
+
+
+        if self.transform is not None:
+            X = self.transform(X)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return X, target
+
+    def shuffle(self, random_state=123):
+            self._df = self._df.sample(frac=1.0, random_state=random_state)
+
+class pandasDataset_daniel(Dataset):
     """
     Defines a dataset composed of sentiment text and labels
     Attributes:
@@ -679,53 +747,68 @@ def tf_dataset_download(data_pars):
 ########################################################################################
 ########################################################################################
 def test(data_path="dataset/", pars_choice="json", config_mode="test"):
-    model_pars = {
-        'embedding_path': '.vector_cache/',
-        'embedding_url': 'https://nlp.stanford.edu/data/glove.6B.zip',
-        'embedding_name': 'glove.6B.300d.txt',
-    }
-    data_pars = {
-    }
-    get_model_data(model_pars, data_pars)
-    exit()
-    
-    data_pars = {
-        'transform': False,
-        'train_path': False,
-        'test_path': False,
-        'dataset': 'mlmodels.preprocess.generic:pandasDataset',
-        # 'data_path': 'mlmodels/dataset/vision/',
-        'train_batch_size': 16,
-        'test_batch_size': 16,
-        'train_path': 'mlmodels/dataset/text/ag_news_csv/',
-        'test_path': 'mlmodels/dataset/text/ag_news_csv/',
-        'train_filename': 'train.csv',
-        'test_filename': 'test.csv',
-        'coly': 0,
-        'colX': 2,
-        'no_header': True,
-        'embed_url': 'https://nlp.stanford.edu/data/glove.6B.zip',
-        'embed_name': 'glove.6B.300d.txt',
-        # 'transform_uri': 'mlmodels.preprocess.image:torch_transform_mnist'
-    }
-
-    train_loader, valid_loader = get_dataset_torch(data_pars)
-    for x, y in train_loader:
-        print(x)
-        print(y)
-        break
-    exit()
-
     ### Local test
 
     log("#### Loading params   ##############################################")
 
+def test_01(verbose=False):
+    data_pars_list = [
+        {
 
+        },
+        {
+            'dataset': 'mlmodels.preprocess.generic:pandasDataset',
+            'train_batch_size': 16,
+            'test_batch_size': 16,
+            'train_path': 'mlmodels/dataset/text/ag_news_csv/',
+            'test_path': 'mlmodels/dataset/text/ag_news_csv/',
+            'filename': 'train.csv',
+            'train_filename': 'train.csv',
+            'test_filename': 'test.csv',
+            'colX': 1,
+            'coly': 0,
+        },
+        {
+            'dataset': 'mlmodels.preprocess.generic:pandasDataset',
+            'train_batch_size': 16,
+            'test_batch_size': 16,
+            'train_path': 'mlmodels/dataset/text/stsbenchmark/',
+            'test_path': 'mlmodels/dataset/text/stsbenchmark/',
+            'train_filename': 'sts-train.csv',
+            'test_filename': 'sts-test.csv',
+            'colX': 5,
+            'coly': 4,
+        },
+        {
+            'dataset': 'mlmodels.preprocess.generic:pandasDataset',
+            'train_batch_size': 16,
+            'test_batch_size': 16,
+            'train_path': 'mlmodels/dataset/text/yelp_reviews/',
+            'test_path': 'mlmodels/dataset/text/yelp_reviews/',
+            'train_filename': 'train.tsv',
+            'test_filename': 'test.tsv',
+            'colX': 1,
+            'coly': 0,
+        }
+    ]
+    for data_pars in data_pars_list:
+        try:
+            train_loader, val_loader = get_dataset_torch(data_pars)
+        except Exception:
+            print('\nFAILED test: ')
+            print('    Calling function \'get_dataset_torch\' with data_pars={}\n'.format(data_pars))
+            if verbose:
+                print('Error message is: ')
+                traceback.print_exc()
+        else:
+            print('\nPASSED test: ')
+            print('    Calling function \'get_dataset_torch\' with data_pars={}\n'.format(data_pars))
+        print(75*'-')
 
 if __name__ == "__main__":
-    test(data_path="model_tch/file.json", pars_choice="json", config_mode="test")
-
-
+    # test(data_path="model_tch/file.json", pars_choice="json", config_mode="test")
+    import traceback
+    test_01(verbose=True)
 
 
 
